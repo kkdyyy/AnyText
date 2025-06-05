@@ -1,5 +1,7 @@
 package com.hhvvg.anytext.hook
 
+import android.view.GestureDetector
+import android.view.MotionEvent
 import android.app.Activity
 import android.app.AndroidAppHelper
 import android.app.Application
@@ -187,13 +189,22 @@ class AnyHookLoaded : IXposedHookLoadPackage {
                     continue
                 }
                 child.isClickable = true
-                hookViewListener(child) { originListener ->
-                    if (originListener is TextViewOnClickWrapper) {
-                        originListener
-                    } else {
-                        TextViewOnClickWrapper(originListener, child)
-                    }
-                }
+                hookViewListener(child) {
+    val gestureDetector = GestureDetector(child.context, object : GestureDetector.SimpleOnGestureListener() {
+        override fun onDoubleTap(e: MotionEvent?): Boolean {
+            // 保留原逻辑，创建 TextViewOnClickWrapper 触发弹窗
+            TextViewOnClickWrapper(null, child).onClick(child)
+            return true
+        }
+    })
+
+    child.setOnTouchListener { _, event ->
+        gestureDetector.onTouchEvent(event)
+        false
+    }
+
+    View.OnClickListener { } // 占位，阻止原单击生效
+}
             }
         }
 
