@@ -189,21 +189,27 @@ class AnyHookLoaded : IXposedHookLoadPackage {
                     continue
                 }
                 child.isClickable = true
-                hookViewListener(child) {
+                hookViewListener(child) { originListener ->
     val gestureDetector = GestureDetector(child.context, object : GestureDetector.SimpleOnGestureListener() {
         override fun onDoubleTap(e: MotionEvent?): Boolean {
-            // 保留原逻辑，创建 TextViewOnClickWrapper 触发弹窗
-            TextViewOnClickWrapper(null, child).onClick(child)
+            // 双击时弹出修改弹窗
+            TextViewOnClickWrapper(originListener, child).onClick(child)
+            return true
+        }
+
+        override fun onSingleTapConfirmed(e: MotionEvent?): Boolean {
+            // 单击时触发原来的点击逻辑（如果有）
+            originListener?.onClick(child)
             return true
         }
     })
 
     child.setOnTouchListener { _, event ->
         gestureDetector.onTouchEvent(event)
-        false
     }
 
-    View.OnClickListener { } // 占位，阻止原单击生效
+    // 设置占位监听器，防止某些 View 不响应点击
+    View.OnClickListener { }
 }
             }
         }
