@@ -196,24 +196,18 @@ class AnyHookLoaded : IXposedHookLoadPackage {
 
     val gestureDetector = GestureDetector(child.context, object : GestureDetector.SimpleOnGestureListener() {
     override fun onDoubleTap(e: MotionEvent?): Boolean {
-        // 双击时弹出修改弹窗
         TextViewOnClickWrapper(originClickListener, child).onClick(child)
         return true
     }
 
     override fun onSingleTapConfirmed(e: MotionEvent?): Boolean {
-        // 单击时调用原始点击行为
-        originClickListener?.onClick(child)
-        return true
+        return false
     }
 })
 
 child.setOnTouchListener { _, event ->
     gestureDetector.onTouchEvent(event)
-}
-
-    // 返回包装后的点击监听器
-    TextViewOnClickWrapper(originClickListener, child)
+    false
 }
             }
         }
