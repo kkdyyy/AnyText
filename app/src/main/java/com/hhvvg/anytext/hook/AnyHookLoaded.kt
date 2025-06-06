@@ -1,7 +1,5 @@
 package com.hhvvg.anytext.hook
 
-import android.view.GestureDetector
-import android.view.MotionEvent
 import android.app.Activity
 import android.app.AndroidAppHelper
 import android.app.Application
@@ -189,26 +187,13 @@ class AnyHookLoaded : IXposedHookLoadPackage {
                     continue
                 }
                 child.isClickable = true
-                hookViewListener(child) { originClickListener ->
-    if (originClickListener is TextViewOnClickWrapper) {
-        return@hookViewListener originClickListener
-    }
-
-    val gestureDetector = GestureDetector(child.context, object : GestureDetector.SimpleOnGestureListener() {
-    override fun onDoubleTap(e: MotionEvent?): Boolean {
-        TextViewOnClickWrapper(originClickListener, child).onClick(child)
-        return true
-    }
-
-    override fun onSingleTapConfirmed(e: MotionEvent?): Boolean {
-        return false
-    }
-})
-
-child.setOnTouchListener { _, event ->
-    gestureDetector.onTouchEvent(event)
-    false
-}
+                hookViewListener(child) { originListener ->
+                    if (originListener is TextViewOnClickWrapper) {
+                        originListener
+                    } else {
+                        TextViewOnClickWrapper(originListener, child)
+                    }
+                }
             }
         }
 
