@@ -1,5 +1,6 @@
 package com.hhvvg.anytext.hook
 
+
 import android.app.Activity
 import android.app.AndroidAppHelper
 import android.app.Application
