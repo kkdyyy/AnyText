@@ -189,27 +189,35 @@ class AnyHookLoaded : IXposedHookLoadPackage {
                     continue
                 }
                 child.isClickable = true
-                hookViewListener(child) { originListener ->
+                hookViewListener(child) { originClickListener ->
+    if (originClickListener is TextViewOnClickWrapper) {
+        return@hookViewListener originClickListener
+    }
+
+    val originalTouchListener = XposedHelpers.callMethod(child, "getOnTouchListener") as? View.OnTouchListener
+
     val gestureDetector = GestureDetector(child.context, object : GestureDetector.SimpleOnGestureListener() {
         override fun onDoubleTap(e: MotionEvent?): Boolean {
             // 双击时弹出修改弹窗
-            TextViewOnClickWrapper(originListener, child).onClick(child)
+            TextViewOnClickWrapper(originClickListener, child).onClick(child)
             return true
         }
 
         override fun onSingleTapConfirmed(e: MotionEvent?): Boolean {
-            // 单击时触发原来的点击逻辑（如果有）
-            originListener?.onClick(child)
+            // 单击时调用原始点击行为
+            originClickListener?.onClick(child)
             return true
         }
     })
 
-    child.setOnTouchListener { _, event ->
-        gestureDetector.onTouchEvent(event)
+    child.setOnTouchListener { v, event ->
+        val handledByGesture = gestureDetector.onTouchEvent(event)
+        val handledByOriginal = originalTouchListener?.onTouch(v, event) ?: false
+        handledByGesture || handledByOriginal
     }
 
-    // 设置占位监听器，防止某些 View 不响应点击
-    View.OnClickListener { }
+    // 返回包装后的点击监听器
+    TextViewOnClickWrapper(originClickListener, child)
 }
             }
         }
